@@ -2,9 +2,8 @@
 
 namespace OMSServiceMini.Services.Authenticatinon
 {
-    public interface IJWTSigningEncodingKey
+    public interface IJwtSigningDecodingKey
     {
-        string SigningAlgorithm { get; }
         SecurityKey GetKey();
     }
 }
