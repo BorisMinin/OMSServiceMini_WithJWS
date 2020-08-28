@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 
 using Microsoft.IdentityModel.Tokens;
 
-
 namespace OMSServiceMini.Services.Authenticatinon
 {
     public class SigningSymmetricKey : IJwtSigningEncodingKey, IJwtSigningDecodingKey
@@ -20,12 +19,9 @@ namespace OMSServiceMini.Services.Authenticatinon
             this._secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
         }
 
-        public SecurityKey GetKey() => this._secretKey;
-    }
-
-
-    public class SigningSimmetricKey
-    {
-
+        public SecurityKey GetKey()
+        { 
+            return this._secretKey; 
+        }
     }
 }
