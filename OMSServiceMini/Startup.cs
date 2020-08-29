@@ -10,7 +10,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using OMSServiceMini.Data;
+using OMSServiceMini.Services.Authenticatinon;
 
 namespace OMSServiceMini
 {
@@ -26,7 +28,43 @@ namespace OMSServiceMini
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            //----Secret key generation-----
+            const string signingSecurityKey = "jgerlj439082734ksjfh9324kljfasf9214jkls";
+            var signingKey = new SigningSymmetricKey(signingSecurityKey);
+            services.AddSingleton<IJwtSigningEncodingKey>(signingKey);
+            //------------------------------
+
             services.AddControllers();
+
+            //----JWTBearer----
+            const string jwtSchemeName = "JwtBearer";
+            var signingDecodingKey = (IJwtSigningDecodingKey)signingKey;
+            services
+                .AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = jwtSchemeName;
+                    options.DefaultChallengeScheme = jwtSchemeName;
+                })
+                .AddJwtBearer(jwtSchemeName, jwtBearerOptions => 
+                {
+                    jwtBearerOptions.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = signingDecodingKey.GetKey(),
+
+                        ValidateIssuer = true,
+                        ValidIssuer = "OMSWebMini",
+
+                        ValidateAudience = true,
+                        ValidAudience = "OMSWebMiniClient",
+
+                        ValidateLifetime = true,
+
+                        ClockSkew = TimeSpan.FromSeconds(5)
+                    };
+                });
+            //----------------
+
             string connection = Configuration.GetConnectionString("OMSDatabase");
             services.AddDbContext<NorthwindContext>(options => options.UseSqlServer(connection));
 
