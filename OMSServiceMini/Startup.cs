@@ -29,18 +29,26 @@ namespace OMSServiceMini
         public void ConfigureServices(IServiceCollection services)
         {
             //----Secret key generation-----
-            const string signingSecurityKey = "jgerlj439082734ksjfh9324kljfasf9214jkls";
+            string signingSecurityKey = Configuration.GetSection("JwtConfig").GetSection("ServiceApiKey").Value;
             var signingKey = new SigningSymmetricKey(signingSecurityKey);
             services.AddSingleton<IJwtSigningEncodingKey>(signingKey);
             //------------------------------
 
+            // инъекция соeдинение NORTHWNDContext - контекст базы данных на SQL Servere
+            string connection = Configuration.GetConnectionString("OMSDatabase");
+
+            services.AddDbContext<NorthwindContext>(options =>
+            options.UseSqlServer(connection));
+            //-------------------------------
+
             services.AddControllers();
 
             //----JWTBearer----
+
             const string jwtSchemeName = "JwtBearer";
             var signingDecodingKey = (IJwtSigningDecodingKey)signingKey;
             services
-                .AddAuthentication(options =>
+                .AddAuthentication(options => 
                 {
                     options.DefaultAuthenticateScheme = jwtSchemeName;
                     options.DefaultChallengeScheme = jwtSchemeName;
@@ -65,8 +73,8 @@ namespace OMSServiceMini
                 });
             //----------------
 
-            string connection = Configuration.GetConnectionString("OMSDatabase");
-            services.AddDbContext<NorthwindContext>(options => options.UseSqlServer(connection));
+            //string connection = Configuration.GetConnectionString("OMSDatabase");
+            //services.AddDbContext<NorthwindContext>(options => options.UseSqlServer(connection));
 
             services.AddSwaggerDocument(config =>
             {
@@ -104,6 +112,7 @@ namespace OMSServiceMini
 
             app.UseRouting();
 
+            app.UseAuthorization();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
